@@ -1,13 +1,13 @@
 package com.example.safeguard
 
 import android.app.NotificationChannel
-import android.util.Log
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.media.RingtoneManager
 import android.os.Build
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
@@ -15,8 +15,8 @@ import com.google.firebase.messaging.RemoteMessage
 class EmergencyNotificationService : FirebaseMessagingService() {
 
     override fun onNewToken(token: String) {
-        super.onNewToken(token) // Ensure the base class handles it
-        sendTokenToServer(token) // Send new token to your database/server
+        super.onNewToken(token) // Ensure base class handles it
+        sendTokenToServer(token) // Send new token to database/server
     }
 
     private fun sendTokenToServer(token: String) {
@@ -31,17 +31,16 @@ class EmergencyNotificationService : FirebaseMessagingService() {
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)
 
-        // Check if message contains a data payload
-        remoteMessage.data.isNotEmpty().let {
+        if (remoteMessage.data.isNotEmpty()) {
             // Check if it's an emergency notification
-            if (remoteMessage.data["type"] == "emergency") {
+            val type = remoteMessage.data["type"]
+            if (type == "emergency") {
                 val userName = remoteMessage.data["userName"] ?: "Someone"
                 val latitude = remoteMessage.data["latitude"]?.toDoubleOrNull()
                 val longitude = remoteMessage.data["longitude"]?.toDoubleOrNull()
                 val emergencyId = remoteMessage.data["emergencyId"]
 
                 if (emergencyId != null) {
-                    // Show emergency notification
                     sendEmergencyNotification(userName, latitude, longitude, emergencyId)
                 }
             }
@@ -67,9 +66,8 @@ class EmergencyNotificationService : FirebaseMessagingService() {
             PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val channelId = CHANNEL_ID
         val defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
-        val notificationBuilder = NotificationCompat.Builder(this, channelId)
+        val notificationBuilder = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_alert) // A built-in alert icon
             .setContentTitle("EMERGENCY ALERT!")
             .setContentText("$userName needs help! Tap to respond.")
@@ -80,12 +78,13 @@ class EmergencyNotificationService : FirebaseMessagingService() {
             .setVibrate(longArrayOf(0, 1000, 500, 1000, 500, 1000))
             .setContentIntent(pendingIntent)
 
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val notificationManager =
+            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         // Create notification channel for Android O and above
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
-                channelId,
+                CHANNEL_ID,
                 "Emergency Alerts",
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
@@ -99,8 +98,4 @@ class EmergencyNotificationService : FirebaseMessagingService() {
 
         notificationManager.notify(0, notificationBuilder.build())
     }
-
-override fun onNewToken(token: String) {
-Update token in database
-  super.onNewToken(token)
- }
+}

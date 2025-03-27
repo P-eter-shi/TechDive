@@ -1,7 +1,7 @@
 package com.example.safeguard.services
 
 import android.app.Service
-import android.content.Context
+//import android.content.Context
 import android.content.Intent
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
@@ -13,10 +13,10 @@ class AudioRecordingService : Service() {
     private lateinit var mediaProjectionManager: MediaProjectionManager
     private var mediaProjection: MediaProjection? = null
 
-    override fun onCreate() {
-        super.onCreate()
-        mediaProjectionManager = getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
-    }
+    //override fun onCreate() {
+       // super.onCreate()
+      //  mediaProjectionManager = getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+   // }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val resultCode = intent?.getIntExtra("RESULT_CODE", -1) ?: -1

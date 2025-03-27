@@ -3,9 +3,7 @@ package com.example.safeguard
 import android.content.Intent
 import android.media.AudioAttributes
 import android.media.MediaPlayer
-import android.net.Uri
 import android.os.Bundle
-//import android.view.View
 import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -19,6 +17,7 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import androidx.core.net.toUri
 
 class EmergencyResponseActivity : AppCompatActivity(), OnMapReadyCallback {
 
@@ -28,6 +27,7 @@ class EmergencyResponseActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var callButton: Button
     private lateinit var navigateButton: Button
     private lateinit var listenButton: Button
+    private lateinit var stopAlarmButton: Button
 
     private var emergencyId: String? = null
     private var latitude: Double? = null
@@ -35,7 +35,8 @@ class EmergencyResponseActivity : AppCompatActivity(), OnMapReadyCallback {
     private var userName: String? = null
     private var phoneNumber: String? = null
     private var mediaPlayer: MediaPlayer? = null
-    private var isPlaying = false
+    private var _isPlaying = false
+    private val isPlaying: Boolean get() = _isPlaying
 
     private val database = FirebaseDatabase.getInstance()
 
@@ -55,6 +56,7 @@ class EmergencyResponseActivity : AppCompatActivity(), OnMapReadyCallback {
         callButton = findViewById(R.id.call_button)
         navigateButton = findViewById(R.id.navigate_button)
         listenButton = findViewById(R.id.listen_button)
+        stopAlarmButton = findViewById(R.id.stop_alarm_button)
 
         // Set initial data
         userNameTextView.text = getString(R.string.help_message, userName)
@@ -62,7 +64,7 @@ class EmergencyResponseActivity : AppCompatActivity(), OnMapReadyCallback {
 
         // Set up map
         val mapFragment = supportFragmentManager
-            .findFragmentById(R.id.map) as SupportMapFragment
+            .findFragmentById(R.id.emergency_map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
         // Load emergency details
@@ -93,12 +95,12 @@ class EmergencyResponseActivity : AppCompatActivity(), OnMapReadyCallback {
                         phoneNumber = snapshot.child("userPhone").getValue(String::class.java)
 
                         // Update status
-                        val isActive = snapshot.child("active").getValue(Boolean::class.java) ?: true
+                        val isActive = snapshot.child("active").getValue(Boolean::class.java) == true
                         if (isActive) {
                             statusTextView.text = getString(R.string.active_emergency)
                             statusTextView.setTextColor(resources.getColor(R.color.red, theme))
                         } else {
-                            statusTextView.text =  getString(R.string.emergency_resolved)
+                            statusTextView.text = getString(R.string.emergency_resolved)
                             statusTextView.setTextColor(resources.getColor(R.color.green, theme))
                         }
                     }
@@ -116,7 +118,7 @@ class EmergencyResponseActivity : AppCompatActivity(), OnMapReadyCallback {
         callButton.setOnClickListener {
             phoneNumber?.let { phone ->
                 val callIntent = Intent(Intent.ACTION_DIAL)
-                callIntent.data = Uri.parse("tel:$phone")
+                callIntent.data = "tel:$phone".toUri()
                 startActivity(callIntent)
             } ?: run {
                 statusTextView.text = getString(R.string.no_phone_number)
@@ -126,7 +128,7 @@ class EmergencyResponseActivity : AppCompatActivity(), OnMapReadyCallback {
         // Navigate button - open Google Maps with directions
         navigateButton.setOnClickListener {
             if (latitude != null && longitude != null) {
-                val gmmIntentUri = Uri.parse("google.navigation:q=$latitude,$longitude&mode=d")
+                val gmmIntentUri = "google.navigation:q=$latitude,$longitude&mode=d".toUri()
                 val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
                 mapIntent.setPackage("com.google.android.apps.maps")
 
@@ -134,7 +136,7 @@ class EmergencyResponseActivity : AppCompatActivity(), OnMapReadyCallback {
                     startActivity(mapIntent)
                 } else {
                     // If Google Maps is not installed, open in browser
-                    val browserUri = Uri.parse("https://www.google.com/maps/dir/?api=1&destination=$latitude,$longitude")
+                    val browserUri = "https://www.google.com/maps/dir/?api=1&destination=$latitude,$longitude".toUri()
                     val browserIntent = Intent(Intent.ACTION_VIEW, browserUri)
                     startActivity(browserIntent)
                 }
@@ -150,6 +152,14 @@ class EmergencyResponseActivity : AppCompatActivity(), OnMapReadyCallback {
                 playLatestAudio()
                 listenButton.text = getString(R.string.stop_listening)
             }
+        }
+
+        // Stop Alarm button - handle emergency resolution
+        stopAlarmButton.setOnClickListener {
+            // TODO: Implement logic to stop/resolve the emergency
+            // This might involve updating the emergency status in Firebase
+            // or notifying relevant parties
+            statusTextView.text = getString(R.string.emergency_resolved)
         }
     }
 
@@ -177,12 +187,13 @@ class EmergencyResponseActivity : AppCompatActivity(), OnMapReadyCallback {
 
                                     setOnPreparedListener {
                                         start()
-                                        //var isPlaying = true
+                                        _isPlaying = true
                                     }
 
                                     setOnCompletionListener {
                                         // Auto-fetch the next recording when this one completes
-                                        playLatestAudio()
+                                        stopAudioPlayback()
+                                        listenButton.text = getString(R.string.listen_to_audio)
                                     }
 
                                     setOnErrorListener { _, _, _ ->
@@ -217,7 +228,8 @@ class EmergencyResponseActivity : AppCompatActivity(), OnMapReadyCallback {
             release()
         }
         mediaPlayer = null
-        isPlaying = false
+        _isPlaying = false
+        listenButton.text = getString(R.string.listen_to_audio)
     }
 
     override fun onMapReady(googleMap: GoogleMap) {

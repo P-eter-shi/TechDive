@@ -1,11 +1,13 @@
 package com.example.safeguard.services
 
+import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
-import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
+//import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.example.safeguard.MainActivity
@@ -40,7 +42,7 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         )
 
         val notificationBuilder = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(R.drawable.ic_notification)
+            .setSmallIcon(R.drawable.ic_bell)
             .setContentTitle(title ?: "SafeGuard Alert")
             .setContentText(message ?: "You have a new notification.")
             .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -60,6 +62,16 @@ class FirebaseMessagingService : FirebaseMessagingService() {
             notificationManager.createNotificationChannel(channel)
         }
 
-        notificationManager.notify(notificationId, notificationBuilder.build())
+        // Check for notification permission on Android 13+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
+                == PackageManager.PERMISSION_GRANTED
+            ) {
+                notificationManager.notify(notificationId, notificationBuilder.build())
+            }
+        } else {
+            // For versions below Android 13, notify directly
+            notificationManager.notify(notificationId, notificationBuilder.build())
+        }
     }
 }

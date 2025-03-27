@@ -22,7 +22,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.Timer
-import java.util.TimerTask
+//import java.util.TimerTask
 
 class RecordingService : Service() {
 
@@ -56,7 +56,7 @@ class RecordingService : Service() {
         startRecording()
 
         // Set up periodic uploads of the recording
-        setupPeriodicUpload()
+        //setupPeriodicUpload()
 
         return START_STICKY
     }
@@ -123,8 +123,9 @@ class RecordingService : Service() {
         }
     }
 
+    /*
     private fun setupPeriodicUpload() {
-        // Upload audio file every 30 seconds
+         Upload audio file every 30 seconds
         timer.scheduleAtFixedRate(object : TimerTask() {
             override fun run() {
                 if (isRecording) {
@@ -132,7 +133,7 @@ class RecordingService : Service() {
                 }
             }
         }, 30000, 30000) // 30 seconds interval
-    }
+    }  */
 
     private fun uploadCurrentRecording() {
         try {

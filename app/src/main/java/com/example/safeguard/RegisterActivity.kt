@@ -1,6 +1,5 @@
 package com.example.safeguard
 
-
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
@@ -35,7 +34,7 @@ class RegisterActivity : AppCompatActivity() {
         // Initialize UI elements
         nameEditText = findViewById(R.id.name_edit_text)
         emailEditText = findViewById(R.id.email_edit_text)
-        phoneEditText = findViewById(R.id.phone_edit_text)
+       // phoneEditText = findViewById(R.id.phone_edit_text)
         passwordEditText = findViewById(R.id.password_edit_text)
         confirmPasswordEditText = findViewById(R.id.confirm_password_edit_text)
         registerButton = findViewById(R.id.registerButton)
@@ -48,7 +47,10 @@ class RegisterActivity : AppCompatActivity() {
 
         // Set up login text view
         loginTextView.setOnClickListener {
-            finish() // Go back to login screen
+            // Go back to login screen
+            val intent = Intent(this, LoginActivity::class.java)
+            startActivity(intent)
+            finish()
         }
     }
 
@@ -62,26 +64,37 @@ class RegisterActivity : AppCompatActivity() {
         // Validate inputs
         if (name.isEmpty()) {
             nameEditText.error = "Name is required"
+            nameEditText.requestFocus()
             return
         }
 
         if (email.isEmpty()) {
             emailEditText.error = "Email is required"
+            emailEditText.requestFocus()
             return
         }
 
         if (phone.isEmpty()) {
             phoneEditText.error = "Phone number is required"
+            phoneEditText.requestFocus()
             return
         }
 
         if (password.isEmpty()) {
             passwordEditText.error = "Password is required"
+            passwordEditText.requestFocus()
+            return
+        }
+
+        if (password.length < 6) {
+            passwordEditText.error = "Password must be at least 6 characters"
+            passwordEditText.requestFocus()
             return
         }
 
         if (password != confirmPassword) {
             confirmPasswordEditText.error = "Passwords do not match"
+            confirmPasswordEditText.requestFocus()
             return
         }
 
@@ -106,6 +119,7 @@ class RegisterActivity : AppCompatActivity() {
 
                     userRef.setValue(userData).addOnCompleteListener { profileTask ->
                         if (profileTask.isSuccessful) {
+                            Toast.makeText(this, "Registration Successful", Toast.LENGTH_SHORT).show()
                             // Go to main activity
                             startActivity(Intent(this, MainActivity::class.java))
                             finish()
